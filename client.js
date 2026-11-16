@@ -67,6 +67,8 @@ window.__ModuleLoader__.load({
       'pop.title': '正在进行的会话',
       'pop.running': '正在进行的会话',
       'pop.completed': '刚刚完成',
+      'pop.hidden.one': '还有 {n} 个会话',
+      'pop.hidden.other': '还有 {n} 个会话',
       'status.running': '运行中',
       'status.completed': '刚刚完成',
       'status.approval': '等待你批准',
@@ -90,6 +92,8 @@ window.__ModuleLoader__.load({
       'pop.title': 'Sessions in progress',
       'pop.running': 'Sessions in progress',
       'pop.completed': 'Just finished',
+      'pop.hidden.one': '{n} more session',
+      'pop.hidden.other': '{n} more sessions',
       'status.running': 'Running',
       'status.completed': 'Just finished',
       'status.approval': 'Waiting for your approval',
@@ -559,6 +563,8 @@ window.__ModuleLoader__.load({
       const running = snapshot.running
       const completed = snapshot.completed
       const [open, setOpen] = useState(false)
+      /** `all` lists every running Session; `hidden` lists only the chips that did not fit. */
+      const [mode, setMode] = useState('all')
       const [anchor, setAnchor] = useState(null)
       const [visibleCount, setVisibleCount] = useState(CHIP_FALLBACK)
       const [resizeTick, setResizeTick] = useState(0)
@@ -629,6 +635,13 @@ window.__ModuleLoader__.load({
       const waiting = running.reduce((count, row) => count + (row.pending === undefined ? 0 : 1), 0)
       const visible = running.slice(0, Math.min(visibleCount, running.length))
       const hidden = running.length - visible.length
+      const hiddenRows = running.slice(visible.length)
+      // The overflow button lists exactly what it collapsed; the count lists everything.
+      const showingHidden = mode === 'hidden' && hiddenRows.length > 0
+      const popRows = showingHidden ? hiddenRows : running
+      const popHead = showingHidden
+        ? t(hiddenRows.length === 1 ? 'pop.hidden.one' : 'pop.hidden.other', { n: hiddenRows.length })
+        : t('pop.running')
       const pick = (sessionId) => {
         setOpen(false)
         onOpen(sessionId)
@@ -668,6 +681,7 @@ window.__ModuleLoader__.load({
             title: t('pop.title'),
             onClick: () => {
               triggerRef.current = countRef.current
+              setMode('all')
               setOpen((value) => !value)
             },
           },
@@ -701,6 +715,7 @@ window.__ModuleLoader__.load({
                 title: t('more', { n: hidden }),
                 onClick: () => {
                   triggerRef.current = moreRef.current
+                  setMode('hidden')
                   setOpen(true)
                 },
               },
@@ -716,23 +731,23 @@ window.__ModuleLoader__.load({
                 'aria-label': t('pop.title'),
                 style: { left: `${anchor.left}px`, top: `${anchor.top}px`, width: `${anchor.width}px` },
               },
-              running.length === 0
+              popRows.length === 0
                 ? null
                 : [
-                    h('div', { className: 'drs-pop-head', key: 'running-head' }, t('pop.running')),
+                    h('div', { className: 'drs-pop-head', key: 'running-head' }, popHead),
                     h(
                       'ul',
                       { className: 'drs-list', key: 'running-list' },
-                      running.map((row) => h(ListRow, { key: row.id, row, t, onOpen: pick })),
+                      popRows.map((row) => h(ListRow, { key: row.id, row, t, onOpen: pick })),
                     ),
                   ],
-              completed.length === 0
+              completed.length === 0 || showingHidden
                 ? null
                 : [
                     h(
                       'div',
                       {
-                        className: running.length === 0 ? 'drs-pop-head' : 'drs-pop-head drs-pop-head-gap',
+                        className: popRows.length === 0 ? 'drs-pop-head' : 'drs-pop-head drs-pop-head-gap',
                         key: 'completed-head',
                       },
                       t('pop.completed'),

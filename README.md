@@ -26,9 +26,10 @@ Every Session that is working right now, as one live status bar at the top of th
 - **The current Session is marked.** The Session you are reading carries a `当前` tag in the
   list and a subtle ring on its chip, so a bar full of similar titles stays unambiguous.
 - **The full list is one click away.** More than the chips can hold collapses into
-  `还有 N 个`; the count button opens a popover with every row — title, workspace, live status,
-  running children, finished Sessions — placed under the control that opened it (right-aligned
-  when that control sits near the right edge) and dismissed with Escape or an outside click.
+  `还有 N 个`; that button opens only the rows it hid, while the count button opens every
+  row — title, workspace, live status, running children, finished Sessions — placed under the
+  control that opened it (right-aligned when that control sits near the right edge) and
+  dismissed with Escape or an outside click.
 - **Live, but quiet.** It subscribes to the Client Session catalog and the unified UI status
   store; the projection is compared by meaning, so a Session that only appends an event does
   not re-render the header. Starting, finishing, and switching to "waiting for you" update in

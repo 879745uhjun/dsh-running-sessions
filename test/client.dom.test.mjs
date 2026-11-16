@@ -273,6 +273,24 @@ await waitFor(() => build.opened.length === 3, 'finished open')
 check('finished row opens the Session', build.opened[2] === 'done-1', String(build.opened[2]))
 await waitFor(() => page.pop() === null, 'popover closes after finished open')
 
+// The overflow button lists only what it collapsed.
+click(page.container.querySelector('.drs-more'))
+await waitFor(() => page.pop() !== null, 'hidden popover')
+check('overflow popover lists only hidden Sessions', page.container.querySelectorAll('.drs-pop .drs-row').length === 2, String(page.container.querySelectorAll('.drs-pop .drs-row').length))
+check('overflow popover names what it hid', page.container.querySelector('.drs-pop-head')?.textContent === '还有 2 个会话', page.container.querySelector('.drs-pop-head')?.textContent ?? '')
+check('overflow popover drops the finished section', page.container.querySelectorAll('.drs-pop-head').length === 1)
+const hiddenRows = page.container.querySelectorAll('.drs-pop .drs-row')
+check('overflow popover lists the collapsed Sessions', hiddenRows[0].textContent.includes('Low 会话') && hiddenRows[1].textContent.includes('Last 会话'))
+document.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
+await waitFor(() => page.pop() === null, 'hidden popover closed')
+
+// The count still opens the complete picture.
+click(page.container.querySelector('.drs-count'))
+await waitFor(() => page.pop() !== null, 'full popover after hidden')
+check('count still lists every Session', page.container.querySelectorAll('.drs-pop .drs-row').length === 6)
+document.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
+await waitFor(() => page.pop() === null, 'full popover closed')
+
 // The bar is live: a Session that stops running leaves the count.
 build.sessions.set(
   catalog([
