@@ -208,6 +208,12 @@ await waitFor(() => page.chips().length > 0, 'chips')
 check('registers one header-leading entry', build.registrations.filter((entry) => entry.entry.name === 'conversation.header.leading').length === 1)
 check('entry carries an id and locale', build.registrations[0].entry.id === 'running-sessions' && build.registrations[0].entry.locale === 'running-sessions')
 check('installs the stylesheet once', document.querySelectorAll('style[data-plugin-css="dsh-running-sessions/RunningSessions.css"]').length === 1)
+check(
+  'two-row header layout is scoped to the mounted bar',
+  (document.querySelector('style[data-plugin-css="dsh-running-sessions/RunningSessions.css"]')?.textContent ?? '').includes(
+    'header:has([data-dsh-running-sessions])',
+  ),
+)
 check('count covers every running Session', page.container.querySelector('.drs-count')?.textContent.includes('5 个会话进行中'), page.container.querySelector('.drs-count')?.textContent ?? '')
 check('count flags the waiting Session', page.container.querySelector('.drs-count')?.getAttribute('data-state') === 'wait')
 check('count spells out who is waiting', page.container.querySelector('.drs-waiting')?.textContent === '1 个等你', page.container.querySelector('.drs-waiting')?.textContent ?? '')
@@ -307,6 +313,9 @@ check('single Session drops the overflow button', page.container.querySelector('
 build.sessions.set(catalog([row('run-new', { title: 'New 会话', running: false })]))
 await waitFor(() => page.bar() === null, 'bar hidden when idle')
 check('bar disappears when nothing runs', page.bar() === null)
+// Idle leaves no element at all — no placeholder, and the scoped `:has()` header rule
+// can no longer match, so the header returns to its stock single-row layout.
+check('idle leaves no placeholder behind', page.container.childNodes.length === 0, String(page.container.childNodes.length))
 
 // ---------------------------------------------------------------------------
 // Nothing running, but something finished while you were away
