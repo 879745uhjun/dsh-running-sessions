@@ -97,7 +97,29 @@ The DOM harness runs the shipped `client.js` in jsdom against a stubbed module l
 catalog, and status store. It covers ordering, filtering, chips, overflow, the waiting
 summary, the current marker, the just-finished section, the popover, popover anchoring,
 Escape and outside-click dismissal, opening a Session, live updates, subagent counts,
-chip-width fitting, notification suppression, and the idle state.
+chip-width fitting, notification suppression, and the idle state (an idle bar leaves no
+placeholder node at all, so the scoped `:has()` header layout cannot keep applying).
+
+## Known costs
+
+Two of these are deliberate trade-offs worth revisiting if the environment grows.
+
+- **Every Session event recomputes the projection.** The bar subscribes to the whole
+  catalog, so one durable event wakes `compute()` for O(sessions) work even when the
+  visible rows are unchanged; the semantic diff only stops React re-renders, not the
+  derive itself. On a profile with hundreds of sessions the next step is an early exit
+  on an `id + pending` signature before running the full projection.
+- **The two-row header is a global layout tax.** While the bar is mounted the whole
+  conversation header switches layouts: the title sits one row lower (about 28px, on the
+  blank home screen too) and the plugin overrides `.titleRow { grid-column: 2 }` through
+  `:has()`, so a future DSH header restructure could break the alignment. There is no
+  "home screen only" switch yet; if the shifted title ever becomes a complaint, adding a
+  preference is cheaper than changing the layout.
+- **Fitting the chips forces layout.** The hidden measuring strip renders one span per
+  running Session and the plugin reads `getBoundingClientRect` for each of them on every
+  row or resize change. Negligible at five Sessions, measurable at fifty.
+- **The bar is mounted at root scope.** Once it has content it renders and updates in
+  every conversation, not only on the home screen; there is no per-page opt-out.
 
 ## License
 
