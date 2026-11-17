@@ -122,6 +122,14 @@ Two of these are deliberate trade-offs worth revisiting if the environment grows
 - **The bar is mounted at root scope.** Once it has content it renders and updates in
   every conversation, not only on the home screen; there is no per-page opt-out.
 
+## Install from GitHub
+
+```sh
+dsh plugin --profile desktop add github:879745uhjun/dsh-running-sessions
+```
+
+Reload the Web UI page after installing.
+
 ## License
 
 MIT.

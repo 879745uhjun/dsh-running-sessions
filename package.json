@@ -56,5 +56,13 @@
         "@deepseek-ai/dsh-client-locale"
       ]
     }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/879745uhjun/dsh-running-sessions.git"
+  },
+  "homepage": "https://github.com/879745uhjun/dsh-running-sessions#readme",
+  "bugs": {
+    "url": "https://github.com/879745uhjun/dsh-running-sessions/issues"
   }
 }

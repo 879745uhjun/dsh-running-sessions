@@ -97,6 +97,14 @@ Esc 与外部点击关闭、打开会话、实时更新、子任务计数、胶�
 - **状态栏挂在 root 作用域。** 一旦有内容，它在每个对话页都会渲染并更新，而不只是主页；
   目前没有按页开关。
 
+## 从 GitHub 安装
+
+```sh
+dsh plugin --profile desktop add github:879745uhjun/dsh-running-sessions
+```
+
+装好后刷新 Web 页面。
+
 ## License
 
 MIT。
