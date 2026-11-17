@@ -18,11 +18,12 @@ Every Session that is working right now, as one live status bar at the top of th
   so the waiting fact survives even when the window is too narrow for chips. Subagent work is
   counted on the parent row instead of pretending to be a separate Session.
 - **Finished work is not lost.** Sessions that stopped running and were not opened again are
-  grouped under `刚刚完成` in the popover, with a green dot and a count segment in the bar.
-  Opening one clears the reminder — from the popover, the sidebar, or anywhere else: the
-  finished list records a Session as read as soon as the main view opens it, and navigating
-  away again does not bring the row back. A later run makes it eligible once more. When
-  nothing is running but something finished, the bar shows only that green tally.
+  grouped under `刚刚完成` at the **top** of the popover — finished first, then what is still
+  running — with a green dot and a count segment in the bar. Opening one clears the reminder —
+  from the popover, the sidebar, or anywhere else: the finished list records a Session as read
+  as soon as the main view opens it, and navigating away again does not bring the row back. A
+  later run makes it eligible once more. When nothing is running but something finished, the
+  bar shows only that green tally.
 - **The current Session is marked.** The Session you are reading carries a `当前` tag in the
   list and a subtle ring on its chip, so a bar full of similar titles stays unambiguous.
 - **The full list is one click away.** More than the chips can hold collapses into

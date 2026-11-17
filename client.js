@@ -731,31 +731,32 @@ window.__ModuleLoader__.load({
                 'aria-label': t('pop.title'),
                 style: { left: `${anchor.left}px`, top: `${anchor.top}px`, width: `${anchor.width}px` },
               },
-              popRows.length === 0
+              completed.length === 0 || showingHidden
                 ? null
                 : [
-                    h('div', { className: 'drs-pop-head', key: 'running-head' }, popHead),
+                    h('div', { className: 'drs-pop-head', key: 'completed-head' }, t('pop.completed')),
                     h(
                       'ul',
-                      { className: 'drs-list', key: 'running-list' },
-                      popRows.map((row) => h(ListRow, { key: row.id, row, t, onOpen: pick })),
+                      { className: 'drs-list', key: 'completed-list' },
+                      completed.map((row) => h(ListRow, { key: row.id, row, t, onOpen: pick, completed: true })),
                     ),
                   ],
-              completed.length === 0 || showingHidden
+              popRows.length === 0
                 ? null
                 : [
                     h(
                       'div',
                       {
-                        className: popRows.length === 0 ? 'drs-pop-head' : 'drs-pop-head drs-pop-head-gap',
-                        key: 'completed-head',
+                        className:
+                          completed.length === 0 || showingHidden ? 'drs-pop-head' : 'drs-pop-head drs-pop-head-gap',
+                        key: 'running-head',
                       },
-                      t('pop.completed'),
+                      popHead,
                     ),
                     h(
                       'ul',
-                      { className: 'drs-list', key: 'completed-list' },
-                      completed.map((row) => h(ListRow, { key: row.id, row, t, onOpen: pick, completed: true })),
+                      { className: 'drs-list', key: 'running-list' },
+                      popRows.map((row) => h(ListRow, { key: row.id, row, t, onOpen: pick })),
                     ),
                   ],
             )
