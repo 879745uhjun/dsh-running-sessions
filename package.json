@@ -1,6 +1,6 @@
 {
   "name": "dsh-running-sessions",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "A live status bar in the DeepSeek Harness conversation header naming every session that is working right now: chips to jump in, waiting-for-you markers, and a full list one click away.",
   "type": "module",
   "main": "index.js",
@@ -32,6 +32,7 @@
     "dsh": ">=0.2.2-rc.1 <0.3.0"
   },
   "scripts": {
+    "pretest": "node --check index.js && node --check client.js",
     "test": "node test/client.dom.test.mjs"
   },
   "devDependencies": {

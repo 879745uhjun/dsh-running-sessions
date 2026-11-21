@@ -117,6 +117,9 @@ function loadPlugin(options = {}) {
         registrations.push({ entry, component })
         return () => {}
       },
+      entries(name) {
+        return registrations.filter((row) => row.entry.name === name).map((row) => ({ options: row.entry }))
+      },
     },
     get(name) {
       if (name === 'sessions') return { list: sessions }
@@ -536,14 +539,90 @@ check('reading a finished Session clears it', source.getSnapshot().completed.len
 source.dispose()
 
 // ---------------------------------------------------------------------------
+// Self-test section (plugins.detail.section)
+// ---------------------------------------------------------------------------
+
+// Leave no mounted bar behind: the idle check reads the document.
+for (const mounted of [page, subagentPage]) {
+  try {
+    mounted.unmount()
+  } catch {}
+}
+check('no bar is mounted before the self-test runs', document.querySelector('[data-dsh-running-sessions]') === null)
+
+const selftestBuild = loadPlugin({ catalog: catalog([]), statuses: new Map() })
+const sectionRegistration = selftestBuild.registrations.find((row) => row.entry.name === 'plugins.detail.section')
+check(
+  'self-test registers its metadata',
+  sectionRegistration !== undefined &&
+    sectionRegistration.entry.id === 'dsh-running-sessions.selftest' &&
+    sectionRegistration.entry.order === 90 &&
+    sectionRegistration.entry.locale === 'running-sessions',
+)
+check(
+  'subject matching accepts both forms',
+  api.matchesSelfTestSubject({ kind: 'bundle', pkg: { name: 'dsh-running-sessions' } }) &&
+    api.matchesSelfTestSubject({ kind: 'item', id: 'dsh-running-sessions' }) &&
+    api.matchesSelfTestSubject({ kind: 'item', id: 'include:dsh-running-sessions' }) &&
+    !api.matchesSelfTestSubject({ kind: 'item', id: 'other' }) &&
+    !api.matchesSelfTestSubject(undefined),
+)
+
+const sectionContainer = document.createElement('div')
+document.body.appendChild(sectionContainer)
+const sectionRoot = createRoot(sectionContainer)
+const sectionT = translator(selftestBuild.dicts.zh)
+const renderSection = (subject) =>
+  sectionRoot.render(React.createElement(sectionRegistration.component, { subject, t: sectionT }))
+
+renderSection({ kind: 'item', id: 'include:dsh-running-sessions' })
+await waitFor(() => sectionContainer.querySelector('.drs-st') !== null, 'self-test section')
+check('section renders for the item subject', sectionContainer.querySelector('.drs-st-title')?.textContent === '自检')
+check('every check starts idle', sectionContainer.querySelectorAll('.drs-st-badge.is-idle').length === 4)
+check('copy starts disabled', sectionContainer.querySelectorAll('.drs-st-btn')[1]?.disabled === true)
+
+sectionContainer.querySelector('.drs-st-btn.is-primary').dispatchEvent(new window.MouseEvent('click', { bubbles: true }))
+await waitFor(() => sectionContainer.querySelectorAll('.drs-st-badge.is-pass').length === 4, 'four passes')
+check('all four checks pass', sectionContainer.querySelectorAll('.drs-st-badge.is-pass').length === 4)
+check('summary reports four passes', sectionContainer.querySelector('.drs-st-summary')?.textContent === '4 通过 · 0 失败 · 0 跳过')
+check('copy is available after a run', sectionContainer.querySelectorAll('.drs-st-btn')[1]?.disabled === false)
+
+// A broken dependency fails only its own row.
+document.querySelectorAll('style[data-plugin-css="dsh-running-sessions/RunningSessions.css"]').forEach((node) => node.remove())
+sectionContainer.querySelector('.drs-st-btn.is-primary').dispatchEvent(new window.MouseEvent('click', { bubbles: true }))
+await waitFor(() => sectionContainer.querySelectorAll('.drs-st-badge.is-fail').length === 1, 'one failure')
+check(
+  'a missing stylesheet fails only its own check',
+  sectionContainer.querySelectorAll('.drs-st-badge.is-pass').length === 3 &&
+    sectionContainer.querySelectorAll('.drs-st-badge.is-fail').length === 1 &&
+    Array.from(sectionContainer.querySelectorAll('.drs-st-row')).some(
+      (node) => node.textContent.includes('样式规则已注入') && node.querySelector('.is-fail') !== null,
+    ),
+)
+check('failure keeps a reason', Array.from(sectionContainer.querySelectorAll('.drs-st-detail')).some((node) => node.textContent.length > 0))
+
+const markdown = api.buildSelfTestMarkdown(
+  [
+    { id: 'a', label: '目录', status: 'pass' },
+    { id: 'b', label: '样式', status: 'fail', detail: '缺样式' },
+  ],
+  sectionT,
+)
+check('markdown uses the required checkbox shape', markdown.includes('- [x] 目录 — 通过') && markdown.includes('- [ ] 样式 — 失败：缺样式'))
+
+const timedOut = await api.withSelfTestTimeout(() => new Promise(() => {}), 15, sectionT)
+check('a hanging check fails after its deadline', timedOut.status === 'fail' && timedOut.detail === '超过 2 秒未完成')
+
+renderSection({ kind: 'item', id: 'another-plugin' })
+await new Promise((resolve) => setTimeout(resolve, 40))
+check('section hides for other plugins', sectionContainer.querySelector('.drs-st') === null)
+sectionRoot.unmount()
+
+// ---------------------------------------------------------------------------
 // Summary
 // ---------------------------------------------------------------------------
 
 await new Promise((resolve) => setTimeout(resolve, 20))
-try {
-  page.unmount()
-  subagentPage.unmount()
-} catch {}
 
 if (failures > 0) {
   console.error(`\n${failures} check(s) failed`)

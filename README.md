@@ -101,6 +101,24 @@ Escape and outside-click dismissal, opening a Session, live updates, subagent co
 chip-width fitting, notification suppression, and the idle state (an idle bar leaves no
 placeholder node at all, so the scoped `:has()` header layout cannot keep applying).
 
+## Self-test
+
+The plugin detail page (Settings → Plugins → **dsh-running-sessions**) carries a **自检 /
+Self-test** section registered on `plugins.detail.section` (`id:
+dsh-running-sessions.selftest`, `order: 90`). It runs only when you press **运行自检** — never on
+mount — and every check owns a 2-second deadline, so one slow probe cannot hide the rest.
+
+| Check | Passes when |
+| --- | --- |
+| Session catalog subscription | `sessions.list.subscribe` is a function |
+| Status bar mount point | `conversation.header.leading` is registered and carries the bar's entry |
+| No placeholder when idle | nothing is running and `[data-dsh-running-sessions]` is absent or 0px tall (reported as *skipped* while sessions run) |
+| Stylesheet injected | the `RunningSessions.css` style tag exists and contains the `data-dsh-running-sessions` rule |
+
+The header summarizes the run (`4 通过 · 0 失败 · 0 跳过`), each row shows its own status and a
+reason on failure, and **复制结果** copies the same result as Markdown
+(`- [x] label — pass` / `- [ ] label — fail: reason`). Results live in component memory only.
+
 ## Known costs
 
 Two of these are deliberate trade-offs worth revisiting if the environment grows.

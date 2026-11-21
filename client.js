@@ -76,6 +76,39 @@ window.__ModuleLoader__.load({
       'status.question': '等待你的回答',
       'subagents.one': '{n} 个子任务',
       'subagents.other': '{n} 个子任务',
+      'selftest.title': '自检',
+      'selftest.run': '运行自检',
+      'selftest.rerun': '重新运行',
+      'selftest.copy': '复制结果',
+      'selftest.copied': '已复制',
+      'selftest.idle': '未运行',
+      'selftest.running': '运行中',
+      'selftest.pass': '通过',
+      'selftest.fail': '失败',
+      'selftest.skip': '跳过',
+      'selftest.summary': '{pass} 通过 · {fail} 失败 · {skip} 跳过',
+      'selftest.error': '自检无法运行：{error}',
+      'selftest.item.catalog': '会话目录订阅',
+      'selftest.item.mount': '状态条挂载点',
+      'selftest.item.idle': '空闲不占位',
+      'selftest.item.style': '样式规则已注入',
+      'selftest.detail.catalog': 'sessions.list.subscribe 不可用',
+      'selftest.detail.catalogOk': 'sessions.list.subscribe 可用',
+      'selftest.detail.mount': 'conversation.header.leading 没有注册项',
+      'selftest.detail.mountEntry': '槽位可用，但状态条条目不在其中',
+      'selftest.detail.mountOk': '槽位已注册',
+      'selftest.detail.idleBusy': '当前有 {n} 个会话运行中，无法验证空闲形态',
+      'selftest.detail.idleAbsent': '无运行会话，且状态条容器不存在',
+      'selftest.detail.idleCollapsed': '无运行会话，状态条高度为 0',
+      'selftest.detail.idleVisible': '无运行会话，但状态条仍占 {height}px',
+      'selftest.detail.style': '找不到 dsh-running-sessions 样式表',
+      'selftest.detail.styleRule': '样式表存在，但没有 data-dsh-running-sessions 规则',
+      'selftest.detail.styleOk': '{size} 字符的样式表已注入',
+      'selftest.detail.timeout': '超过 2 秒未完成',
+      'selftest.markdown.title': '## {plugin} 自检',
+      'selftest.markdown.passLine': '- [x] {label} — 通过',
+      'selftest.markdown.failLine': '- [ ] {label} — 失败：{detail}',
+      'selftest.markdown.skipLine': '- [ ] {label} — 跳过：{detail}',
     }
 
     const EN = {
@@ -101,6 +134,39 @@ window.__ModuleLoader__.load({
       'status.question': 'Waiting for your answer',
       'subagents.one': '{n} subagent',
       'subagents.other': '{n} subagents',
+      'selftest.title': 'Self-test',
+      'selftest.run': 'Run self-test',
+      'selftest.rerun': 'Run again',
+      'selftest.copy': 'Copy result',
+      'selftest.copied': 'Copied',
+      'selftest.idle': 'Not run',
+      'selftest.running': 'Running',
+      'selftest.pass': 'Pass',
+      'selftest.fail': 'Fail',
+      'selftest.skip': 'Skipped',
+      'selftest.summary': '{pass} passed · {fail} failed · {skip} skipped',
+      'selftest.error': 'Could not run the self-test: {error}',
+      'selftest.item.catalog': 'Session catalog subscription',
+      'selftest.item.mount': 'Status bar mount point',
+      'selftest.item.idle': 'No placeholder when idle',
+      'selftest.item.style': 'Stylesheet injected',
+      'selftest.detail.catalog': 'sessions.list.subscribe is unavailable',
+      'selftest.detail.catalogOk': 'sessions.list.subscribe is available',
+      'selftest.detail.mount': 'conversation.header.leading has no registrations',
+      'selftest.detail.mountEntry': 'the slot is available but the status bar entry is missing',
+      'selftest.detail.mountOk': 'the slot is registered',
+      'selftest.detail.idleBusy': '{n} sessions are running, so the idle form cannot be checked',
+      'selftest.detail.idleAbsent': 'nothing is running and the bar container is absent',
+      'selftest.detail.idleCollapsed': 'nothing is running and the bar height is 0',
+      'selftest.detail.idleVisible': 'nothing is running but the bar still occupies {height}px',
+      'selftest.detail.style': 'the dsh-running-sessions stylesheet is missing',
+      'selftest.detail.styleRule': 'the stylesheet exists but has no data-dsh-running-sessions rule',
+      'selftest.detail.styleOk': 'the injected stylesheet has {size} characters',
+      'selftest.detail.timeout': 'timed out after 2s',
+      'selftest.markdown.title': '## {plugin} self-test',
+      'selftest.markdown.passLine': '- [x] {label} — pass',
+      'selftest.markdown.failLine': '- [ ] {label} — fail: {detail}',
+      'selftest.markdown.skipLine': '- [ ] {label} — skipped: {detail}',
     }
 
     /* ------------------------------------------------------------------ *
@@ -416,6 +482,23 @@ window.__ModuleLoader__.load({
       '.drs-pop::-webkit-scrollbar-thumb{background:var(--dsw-alias-scrollbar-bg-l2);border-radius:4px}',
       '.drs-pop-head{padding:4px 8px 6px;color:var(--dsw-alias-label-caption);font-size:11px;font-weight:600;letter-spacing:.02em}',
       '.drs-pop-head-gap{margin-top:6px;border-top:.5px solid var(--dsw-alias-border-l1);padding-top:9px}',
+      '.drs-st{display:flex;flex-direction:column;gap:8px;margin-top:14px;padding-top:12px;border-top:.5px solid var(--dsw-alias-border-l2)}',
+      '.drs-st-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap}',
+      '.drs-st-title{font-weight:600}',
+      '.drs-st-summary{flex:1;min-width:0;font-size:12px;color:var(--dsw-alias-label-secondary)}',
+      '.drs-st-btn{display:inline-flex;align-items:center;justify-content:center;height:26px;padding:0 10px;border:.5px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-sm,6px);background:transparent;color:var(--dsw-alias-label-primary);font:inherit;font-size:12px;cursor:pointer;white-space:nowrap}',
+      '.drs-st-btn:hover:not(:disabled){background:var(--dsw-alias-bg-layer-2)}',
+      '.drs-st-btn.is-primary{border-color:transparent;background:var(--dsw-alias-brand-primary);color:#fff}',
+      '.drs-st-btn:disabled{opacity:.45;cursor:default}',
+      '.drs-st-error{font-size:12px;color:var(--dsw-alias-state-error-primary)}',
+      '.drs-st-items{display:flex;flex-direction:column;gap:2px}',
+      '.drs-st-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:3px 0}',
+      '.drs-st-label{flex:1;min-width:0;font-size:13px}',
+      '.drs-st-badge{flex:none;font-size:12px;color:var(--dsw-alias-label-secondary)}',
+      '.drs-st-badge.is-pass{color:var(--dsw-alias-state-success-primary)}',
+      '.drs-st-badge.is-fail{color:var(--dsw-alias-state-error-primary)}',
+      '.drs-st-badge.is-skip{color:var(--dsw-alias-state-warn-primary)}',
+      '.drs-st-detail{flex-basis:100%;font-size:12px;color:var(--dsw-alias-label-secondary)}',
       '.drs-list{list-style:none;margin:0;padding:0}',
       '.drs-row{appearance:none;box-sizing:border-box;width:100%;display:flex;align-items:center;gap:9px;padding:6px 8px;border:0;border-radius:var(--dsw-radius-md);background:transparent;color:inherit;font:inherit;text-align:left;cursor:pointer}',
       '.drs-row:hover{background:var(--dsw-alias-interactive-bg-hover)}',
@@ -776,6 +859,301 @@ window.__ModuleLoader__.load({
       )
     }
 
+    /* ------------------------------------------------------------------ *
+     * Self-test (plugins.detail.section)
+     * ------------------------------------------------------------------ */
+
+    const SELFTEST_TIMEOUT_MS = 2000
+
+    function describeError(error) {
+      return error instanceof Error ? error.message : String(error)
+    }
+
+    /** Bundle and item subjects name the same plugin; accept both spellings. */
+    function selfTestPluginName(subject) {
+      if (subject?.kind === 'bundle') return subject?.pkg?.name
+      if (subject?.kind === 'item') {
+        return subject.id === 'dsh-running-sessions' || subject.id === 'include:dsh-running-sessions'
+          ? 'dsh-running-sessions'
+          : undefined
+      }
+      return undefined
+    }
+
+    function matchesSelfTestSubject(subject) {
+      return selfTestPluginName(subject) === 'dsh-running-sessions'
+    }
+
+    function selfTestItems(t) {
+      return [
+        { id: 'catalog', label: t('selftest.item.catalog'), status: 'idle' },
+        { id: 'mount', label: t('selftest.item.mount'), status: 'idle' },
+        { id: 'idle', label: t('selftest.item.idle'), status: 'idle' },
+        { id: 'style', label: t('selftest.item.style'), status: 'idle' },
+      ]
+    }
+
+    function selfTestSummary(items) {
+      const summary = { pass: 0, fail: 0, skip: 0 }
+      for (const item of items) {
+        if (item.status === 'pass') summary.pass += 1
+        else if (item.status === 'skip') summary.skip += 1
+        else if (item.status === 'fail') summary.fail += 1
+      }
+      return summary
+    }
+
+    function buildSelfTestMarkdown(items, t) {
+      const summary = selfTestSummary(items)
+      const lines = [
+        t('selftest.markdown.title', { plugin: 'dsh-running-sessions' }),
+        t('selftest.summary', { pass: String(summary.pass), fail: String(summary.fail), skip: String(summary.skip) }),
+        '',
+      ]
+      for (const item of items) {
+        if (item.status === 'pass') lines.push(t('selftest.markdown.passLine', { label: item.label }))
+        else if (item.status === 'skip') lines.push(t('selftest.markdown.skipLine', { label: item.label, detail: item.detail ?? '' }))
+        else lines.push(t('selftest.markdown.failLine', { label: item.label, detail: item.detail ?? '' }))
+      }
+      return lines.join('\n')
+    }
+
+    /** Run one check with a hard deadline; a timeout becomes a failed row. */
+    function withSelfTestTimeout(run, timeoutMs, t) {
+      return new Promise((resolve) => {
+        let settled = false
+        const controller = typeof AbortController === 'function' ? new AbortController() : null
+        const timer = setTimeout(() => {
+          if (settled) return
+          settled = true
+          try {
+            controller?.abort()
+          } catch {
+            /* abort is best effort */
+          }
+          resolve({ status: 'fail', detail: t('selftest.detail.timeout') })
+        }, timeoutMs)
+        Promise.resolve()
+          .then(() => run(controller?.signal))
+          .then(
+            (result) => {
+              if (settled) return
+              settled = true
+              clearTimeout(timer)
+              resolve(result)
+            },
+            (error) => {
+              if (settled) return
+              settled = true
+              clearTimeout(timer)
+              resolve({ status: 'fail', detail: describeError(error) })
+            },
+          )
+      })
+    }
+
+    /** Running top-level Sessions, or undefined when the catalog is unreadable. */
+    function runningSessionCount(ctx) {
+      const snapshot = ctx.get('sessions')?.list?.getSnapshot?.()
+      if (snapshot === undefined || !Array.isArray(snapshot.ids)) return undefined
+      let count = 0
+      for (const id of snapshot.ids) {
+        const row = snapshot.byId?.[id]
+        if (row === undefined || row.blank === true || row.origin === 'subagent') continue
+        if (row.running === true) count += 1
+      }
+      return count
+    }
+
+    function selfTestStyleState() {
+      const style = document.querySelector('style[data-plugin-css="dsh-running-sessions/RunningSessions.css"]')
+      if (style === null) return { status: 'fail', detailKey: 'selftest.detail.style' }
+      const text = typeof style.textContent === 'string' ? style.textContent : ''
+      if (!text.includes('data-dsh-running-sessions')) return { status: 'fail', detailKey: 'selftest.detail.styleRule' }
+      return { status: 'pass', detailKey: 'selftest.detail.styleOk', size: text.length }
+    }
+
+    /** Run the four read-only checks in parallel; each owns its own deadline. */
+    async function runSelfTest(ctx, t, timeoutMs = SELFTEST_TIMEOUT_MS) {
+      const checks = [
+        {
+          id: 'catalog',
+          label: t('selftest.item.catalog'),
+          run: () => {
+            const list = ctx.get('sessions')?.list
+            return typeof list?.subscribe === 'function'
+              ? { status: 'pass', detail: t('selftest.detail.catalogOk') }
+              : { status: 'fail', detail: t('selftest.detail.catalog') }
+          },
+        },
+        {
+          id: 'mount',
+          label: t('selftest.item.mount'),
+          run: () => {
+            const entries = typeof ctx.slots?.entries === 'function' ? ctx.slots.entries('conversation.header.leading') : []
+            if (!Array.isArray(entries) || entries.length === 0) return { status: 'fail', detail: t('selftest.detail.mount') }
+            const mounted = entries.some((entry) => entry?.options?.id === 'running-sessions')
+            return mounted
+              ? { status: 'pass', detail: t('selftest.detail.mountOk') }
+              : { status: 'fail', detail: t('selftest.detail.mountEntry') }
+          },
+        },
+        {
+          id: 'idle',
+          label: t('selftest.item.idle'),
+          run: () => {
+            const count = runningSessionCount(ctx)
+            if (count === undefined) return { status: 'fail', detail: t('selftest.detail.catalog') }
+            if (count > 0) return { status: 'skip', detail: t('selftest.detail.idleBusy', { n: String(count) }) }
+            const bar = document.querySelector('[data-dsh-running-sessions]')
+            if (bar === null) return { status: 'pass', detail: t('selftest.detail.idleAbsent') }
+            const rect = typeof bar.getBoundingClientRect === 'function' ? bar.getBoundingClientRect() : undefined
+            const height = rect?.height ?? bar.offsetHeight ?? 0
+            if (height === 0) return { status: 'pass', detail: t('selftest.detail.idleCollapsed') }
+            return { status: 'fail', detail: t('selftest.detail.idleVisible', { height: String(Math.round(height)) }) }
+          },
+        },
+        {
+          id: 'style',
+          label: t('selftest.item.style'),
+          run: () => {
+            const state = selfTestStyleState()
+            if (state.status !== 'pass') return { status: state.status, detail: t(state.detailKey) }
+            return { status: 'pass', detail: t(state.detailKey, { size: String(state.size) }) }
+          },
+        },
+      ]
+      const results = await Promise.all(checks.map((check) => withSelfTestTimeout(() => check.run(), timeoutMs, t)))
+      const items = checks.map((check, index) => ({ id: check.id, label: check.label, ...results[index] }))
+      return { items, summary: selfTestSummary(items), markdown: buildSelfTestMarkdown(items, t) }
+    }
+
+    /** Build the section component with the plugin context captured once. */
+    function createSelfTestSection(ctx) {
+      return function SelfTestSection({ subject, t }) {
+        const [state, setState] = useState(() => ({
+          running: false,
+          items: selfTestItems(t),
+          summary: null,
+          error: null,
+          copied: false,
+          markdown: '',
+        }))
+        const copyTimer = useRef(0)
+        useEffect(() => () => window.clearTimeout(copyTimer.current), [])
+
+        if (!matchesSelfTestSubject(subject)) return null
+
+        const summary = state.running
+          ? t('selftest.running')
+          : state.summary === null
+            ? t('selftest.idle')
+            : t('selftest.summary', {
+                pass: String(state.summary.pass),
+                fail: String(state.summary.fail),
+                skip: String(state.summary.skip),
+              })
+
+        async function run() {
+          setState({
+            running: true,
+            items: selfTestItems(t).map((item) => ({ ...item, status: 'running' })),
+            summary: null,
+            error: null,
+            copied: false,
+            markdown: '',
+          })
+          try {
+            const result = await runSelfTest(ctx, t)
+            setState({
+              running: false,
+              items: result.items,
+              summary: result.summary,
+              error: null,
+              copied: false,
+              markdown: result.markdown,
+            })
+          } catch (error) {
+            const reason = describeError(error)
+            setState({
+              running: false,
+              items: selfTestItems(t).map((item) => ({ ...item, status: 'fail', detail: reason })),
+              summary: { pass: 0, fail: 4, skip: 0 },
+              error: reason,
+              copied: false,
+              markdown: '',
+            })
+          }
+        }
+
+        async function copy() {
+          if (state.markdown === '') return
+          try {
+            await navigator.clipboard.writeText(state.markdown)
+            setState({ ...state, copied: true })
+            window.clearTimeout(copyTimer.current)
+            copyTimer.current = window.setTimeout(() => {
+              setState((current) => ({ ...current, copied: false }))
+            }, 1600)
+          } catch {
+            /* clipboard denied; the result stays on screen */
+          }
+        }
+
+        return h(
+          'section',
+          { className: 'drs-st', 'data-plugin': 'dsh-running-sessions' },
+          h(
+            'div',
+            { className: 'drs-st-head' },
+            h('span', { className: 'drs-st-title' }, t('selftest.title')),
+            h('span', { className: 'drs-st-summary', role: 'status' }, summary),
+            h(
+              'button',
+              {
+                type: 'button',
+                className: 'drs-st-btn is-primary',
+                disabled: state.running,
+                onClick: () => {
+                  void run()
+                },
+              },
+              state.running ? t('selftest.running') : state.summary === null ? t('selftest.run') : t('selftest.rerun'),
+            ),
+            h(
+              'button',
+              {
+                type: 'button',
+                className: 'drs-st-btn',
+                disabled: state.markdown === '',
+                onClick: () => {
+                  void copy()
+                },
+              },
+              state.copied ? t('selftest.copied') : t('selftest.copy'),
+            ),
+          ),
+          state.error === null ? null : h('div', { className: 'drs-st-error' }, t('selftest.error', { error: state.error })),
+          h(
+            'div',
+            { className: 'drs-st-items' },
+            state.items.map((row) =>
+              h(
+                'div',
+                { key: row.id, className: 'drs-st-row' },
+                h('span', { className: 'drs-st-label' }, row.label),
+                h('span', { className: `drs-st-badge is-${row.status}` }, t(`selftest.${row.status}`)),
+                typeof row.detail === 'string' && row.detail !== ''
+                  ? h('span', { className: 'drs-st-detail' }, row.detail)
+                  : null,
+              ),
+            ),
+          ),
+        )
+      }
+    }
+
+
     /** Workspace titles by Session id, built in one pass per projection. */
     function createWorkspaceTitles(ctx) {
       return () => {
@@ -807,6 +1185,13 @@ window.__ModuleLoader__.load({
       visibleChipCount,
       popoverLeft,
       createRunningSource,
+      matchesSelfTestSubject,
+      selfTestPluginName,
+      selfTestItems,
+      selfTestSummary,
+      buildSelfTestMarkdown,
+      withSelfTestTimeout,
+      runSelfTest,
       CSS,
       ZH,
       EN,
@@ -868,6 +1253,18 @@ window.__ModuleLoader__.load({
               locale: NS,
             },
             (props) => h(StatusBar, { ...props, source, onOpen: openSession }),
+          ),
+        )
+
+        ctx.slots.inject('plugins.detail.section', () =>
+          ctx.slots.register(
+            {
+              name: 'plugins.detail.section',
+              id: 'dsh-running-sessions.selftest',
+              order: 90,
+              locale: NS,
+            },
+            createSelfTestSection(ctx),
           ),
         )
       },
