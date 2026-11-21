@@ -76,16 +76,19 @@ The browser half reads three Client facts and nothing else:
 
 `deriveRunning` filters out blank Sessions (the New Session page itself) and subagent rows,
 puts waiting Sessions first, and ranks the rest by when they were first seen running so the
-chips stay put while Sessions write events. `deriveCompleted` collects the unread finishes,
-newest first, capped at six. Running children are counted through their parent's
-`subagentCatalog`; the current Session is the row whose `retainedBy.mainView` is positive. A
-single external store merges the two stores, compares each projection with the previous one by
-meaning (running plus finished), and only then wakes React — an activity-only event keeps the
-same array identity. Chip count is fitted from measured chip widths against
-`min(72vw, 1200px)` minus the measured count button, reserving space for `还有 N 个` only when
-something is hidden. The popover anchors to whichever control opened it, flipping to
-right-alignment near the viewport edge. Opening a row goes through `ctx.uiWorkspace.openSession`,
-the same navigation a sidebar click uses.
+chips stay put while Sessions write events. Running state lives in an incremental
+`Map<id, boolean>`: the catalog has no delta channel, so each notification still reads every
+summary's `running` bit once, but an entry is rewritten only when the bit changes, and the
+rendered rows (title, workspace, subagent counts, sorting) are built for the running ids
+alone. `deriveCompleted` collects the unread finishes, newest first, capped at six. Running
+children are counted through their parent's `subagentCatalog`; the current Session is the row
+whose `retainedBy.mainView` is positive. A single external store merges the two stores,
+compares each projection with the previous one by meaning (running plus finished), and only
+then wakes React — an activity-only event keeps the same array identity. Chip count is fitted
+from measured chip widths against `min(72vw, 1200px)` minus the measured count button,
+reserving space for `还有 N 个` only when something is hidden. The popover anchors to whichever
+control opened it, flipping to right-alignment near the viewport edge. Opening a row goes
+through `ctx.uiWorkspace.openSession`, the same navigation a sidebar click uses.
 
 ### Development
 
@@ -123,11 +126,10 @@ reason on failure, and **复制结果** copies the same result as Markdown
 
 Two of these are deliberate trade-offs worth revisiting if the environment grows.
 
-- **Every Session event recomputes the projection.** The bar subscribes to the whole
-  catalog, so one durable event wakes `compute()` for O(sessions) work even when the
-  visible rows are unchanged; the semantic diff only stops React re-renders, not the
-  derive itself. On a profile with hundreds of sessions the next step is an early exit
-  on an `id + pending` signature before running the full projection.
+- **One read pass per event remains.** The running bit is an incremental `Map<id, boolean>`
+  and only the running rows are rebuilt, but the catalog has no delta channel: every
+  notification still reads each summary's `running` bit once to notice a change. That is a
+  cheap pass rather than a rebuild; a host delta API would remove it entirely.
 - **The two-row header is a global layout tax.** While the bar is mounted the whole
   conversation header switches layouts: the title sits one row lower (about 28px, on the
   blank home screen too) and the plugin overrides `.titleRow { grid-column: 2 }` through

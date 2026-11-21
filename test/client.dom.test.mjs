@@ -539,6 +539,76 @@ check('reading a finished Session clears it', source.getSnapshot().completed.len
 source.dispose()
 
 // ---------------------------------------------------------------------------
+// Incremental running index
+// ---------------------------------------------------------------------------
+
+const bulkRows = (runningAt) =>
+  Array.from({ length: 50 }, (_, index) =>
+    row(`bulk-${index}`, { title: `Bulk ${index}`, running: index === runningAt, updatedAt: 1_000 + index }),
+  )
+
+const bulkStore = createStore(catalog(bulkRows(-1)))
+const bulkStatus = createStore(new Map())
+const bulkSource = api.createRunningSource(bulkStore, bulkStatus, () => new Map())
+bulkSource.getSnapshot()
+check('bulk build tracks every listed Session', bulkSource.stats().tracked === 50 && bulkSource.stats().running === 0)
+check('bulk build counts one update per entry', bulkSource.stats().updates === 50, String(bulkSource.stats().updates))
+
+const updatesBeforeFlip = bulkSource.stats().updates
+bulkStore.set(catalog(bulkRows(0)))
+check(
+  'one running flip updates exactly one entry',
+  bulkSource.stats().updates - updatesBeforeFlip === 1,
+  String(bulkSource.stats().updates - updatesBeforeFlip),
+)
+check('the flipped Session is the running one', bulkSource.stats().running === 1 && bulkSource.getSnapshot().running[0].id === 'bulk-0')
+
+bulkStore.set(catalog([...bulkRows(0), row('bulk-new', { title: 'Bulk new', running: true, updatedAt: 2_000 })]))
+check('adding a Session tracks it', bulkSource.stats().tracked === 51 && bulkSource.stats().running === 2)
+bulkStore.set(catalog(bulkRows(0)))
+check('removing a Session drops it', bulkSource.stats().tracked === 50 && bulkSource.stats().running === 1)
+check('the removed Session leaves the snapshot', !bulkSource.getSnapshot().running.some((entry) => entry.id === 'bulk-new'))
+
+// A driven sequence must land on exactly the same bytes as one full build.
+const sequenceStore = createStore(catalog([]))
+const sequenceStatus = createStore(new Map())
+const incremental = api.createRunningSource(sequenceStore, sequenceStatus, () => new Map())
+incremental.getSnapshot()
+sequenceStore.set(catalog([row('s1', { title: 'One', running: true, updatedAt: 10 }), row('s2', { title: 'Two' })]))
+sequenceStatus.set(new Map([['s2', { running: true }]]))
+sequenceStore.set(
+  catalog([
+    row('s1', { title: 'One renamed', running: true, updatedAt: 10 }),
+    row('s2', { title: 'Two', running: true, updatedAt: 11 }),
+    row('s3', { title: 'Three', updatedAt: 12 }),
+  ]),
+)
+sequenceStatus.set(new Map([['s3', { running: false, completionUnread: true }]]))
+const incrementalSnapshot = incremental.getSnapshot()
+
+const finalCatalog = catalog([
+  row('s1', { title: 'One renamed', running: true, updatedAt: 10 }),
+  row('s2', { title: 'Two', running: true, updatedAt: 11 }),
+  row('s3', { title: 'Three', updatedAt: 12 }),
+])
+const finalStatuses = new Map([['s3', { running: false, completionUnread: true }]])
+const freshSource = api.createRunningSource(createStore(finalCatalog), createStore(finalStatuses), () => new Map())
+check('incremental output equals a fresh build', JSON.stringify(incrementalSnapshot) === JSON.stringify(freshSource.getSnapshot()))
+check(
+  'running rows still match the reference derive',
+  JSON.stringify(incrementalSnapshot.running) ===
+    JSON.stringify(api.deriveRunning(finalCatalog, finalStatuses, () => '', (id) => incremental.rankOf(id))),
+)
+check(
+  'finished rows still match the reference derive',
+  JSON.stringify(incrementalSnapshot.completed) ===
+    JSON.stringify(api.deriveCompleted(finalCatalog, finalStatuses, () => '', new Set())),
+)
+incremental.dispose()
+freshSource.dispose()
+bulkSource.dispose()
+
+// ---------------------------------------------------------------------------
 // Self-test section (plugins.detail.section)
 // ---------------------------------------------------------------------------
 

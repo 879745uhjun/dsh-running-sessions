@@ -362,6 +362,13 @@ window.__ModuleLoader__.load({
      * means the same thing. A Session that only writes a durable event moves
      * `updatedAt` but not the bar, so it must not re-render the header.
      *
+     * Running state itself is incremental. The catalog is rewritten on every
+     * Session event, so one pass over `ids` is unavoidable — the store has no
+     * delta channel — but the source keeps a `Map<id, boolean>` of the bar's
+     * effective running bit and writes an entry only when that bit actually
+     * changes. Everything expensive (title, workspace, subagent counts,
+     * sorting) is then built for the running ids alone.
+     *
      * The source also owns the chip order. Sorting by activity would make chips
      * jump every time any Session writes an event, so each running Session is
      * ranked when first observed and keeps that rank until it stops; a later
@@ -373,35 +380,118 @@ window.__ModuleLoader__.load({
      */
     function createRunningSource(list, statusStore, workspaceTitles) {
       const listeners = new Set()
+      /** Bar-effective running bit per listed Session. */
+      const runningStates = new Map()
       const rank = new Map()
       const visited = new Set()
       let sequence = 0
+      let updates = 0
       let cache = null
       let disposed = false
-      /** Keep one stable first-seen rank per Session that is still running. */
-      const refreshRank = (catalog, statuses) => {
-        const running = new Set()
+
+      /**
+       * Reconcile the index with one catalog snapshot.
+       *
+       * @param catalog - `sessions.list` snapshot.
+       * @param statuses - unified status map.
+       * @returns ids that are running now and ids that just finished unread.
+       */
+      const sync = (catalog, statuses) => {
+        const seen = new Set()
+        const runningIds = []
+        const completedIds = []
         for (const id of catalog.ids) {
           const row = catalog.byId[id]
           if (row === undefined) continue
+          seen.add(id)
+          if (row.blank === true || row.origin === 'subagent') {
+            if (runningStates.delete(id)) updates += 1
+            rank.delete(id)
+            continue
+          }
           const status = statuses.get(id)
-          if ((status?.running ?? row.running) === true) running.add(id)
+          const running = (status?.running ?? row.running) === true
+          const known = runningStates.get(id)
+          if (known !== running) {
+            runningStates.set(id, running)
+            updates += 1
+          }
+          if (running) {
+            if (!rank.has(id)) rank.set(id, sequence++)
+            runningIds.push(id)
+            visited.delete(id)
+            continue
+          }
+          rank.delete(id)
+          if (status?.completionUnread !== true) {
+            visited.delete(id)
+            continue
+          }
+          if ((row.retainedBy?.mainView ?? 0) > 0) {
+            visited.add(id)
+            continue
+          }
+          if (visited.has(id)) continue
+          completedIds.push(id)
         }
-        for (const id of rank.keys()) if (!running.has(id)) rank.delete(id)
-        for (const id of running) {
-          if (!rank.has(id)) rank.set(id, sequence++)
+        for (const id of [...runningStates.keys()]) {
+          if (seen.has(id)) continue
+          runningStates.delete(id)
+          rank.delete(id)
+          updates += 1
+        }
+        for (const id of visited) if (catalog.byId[id] === undefined) visited.delete(id)
+        return { runningIds, completedIds }
+      }
+
+      /** Build the rendered projection from the ids the index already selected. */
+      const build = (catalog, statuses, labelOf, runningIds, completedIds) => {
+        const running = runningIds.map((id) => {
+          const row = catalog.byId[id]
+          const status = statuses.get(id)
+          return {
+            id,
+            title: titleOf(row),
+            workspace: labelOf(id, row),
+            pending: pendingOf(status),
+            current: (row.retainedBy?.mainView ?? 0) > 0,
+            subagents: runningChildren(catalog, id, statuses),
+            updatedAt: typeof row.updatedAt === 'number' ? row.updatedAt : 0,
+          }
+        })
+        running.sort((left, right) => {
+          const leftWaiting = left.pending === undefined ? 0 : 1
+          const rightWaiting = right.pending === undefined ? 0 : 1
+          if (leftWaiting !== rightWaiting) return rightWaiting - leftWaiting
+          const leftRank = rank.get(left.id)
+          const rightRank = rank.get(right.id)
+          if (leftRank !== undefined && rightRank !== undefined && leftRank !== rightRank) return leftRank - rightRank
+          if (left.updatedAt !== right.updatedAt) return right.updatedAt - left.updatedAt
+          return left.id < right.id ? -1 : left.id > right.id ? 1 : 0
+        })
+        const completed = completedIds.map((id) => {
+          const row = catalog.byId[id]
+          return {
+            id,
+            title: titleOf(row),
+            workspace: labelOf(id, row),
+            updatedAt: typeof row.updatedAt === 'number' ? row.updatedAt : 0,
+          }
+        })
+        completed.sort((left, right) => (right.updatedAt - left.updatedAt) || (left.id < right.id ? -1 : left.id > right.id ? 1 : 0))
+        return {
+          running,
+          completed: completed.length > COMPLETED_LIMIT ? completed.slice(0, COMPLETED_LIMIT) : completed,
         }
       }
+
       const compute = () => {
         const catalog = list.getSnapshot()
         const statuses = statusStore?.getSnapshot?.() ?? new Map()
-        refreshRank(catalog, statuses)
+        const { runningIds, completedIds } = sync(catalog, statuses)
         const labels = workspaceTitles()
         const labelOf = (sessionId, row) => labels.get(sessionId) ?? basename(row.cwd)
-        return {
-          running: deriveRunning(catalog, statuses, labelOf, (id) => rank.get(id)),
-          completed: deriveCompleted(catalog, statuses, labelOf, visited),
-        }
+        return build(catalog, statuses, labelOf, runningIds, completedIds)
       }
       const invalidate = () => {
         if (disposed) return
@@ -425,17 +515,27 @@ window.__ModuleLoader__.load({
           if (cache === null) cache = compute()
           return cache
         },
+        /** Counter-shaped view for the parity tests: how many Map entries changed. */
+        stats() {
+          let running = 0
+          for (const state of runningStates.values()) if (state) running += 1
+          return { updates, tracked: runningStates.size, running }
+        },
+        /** First-seen rank for one id; test and debug aid. */
+        rankOf(id) {
+          return rank.get(id)
+        },
         dispose() {
           disposed = true
           for (const dispose of disposers) dispose()
           disposers.length = 0
           listeners.clear()
+          runningStates.clear()
           rank.clear()
           visited.clear()
         },
       }
     }
-
     /* ------------------------------------------------------------------ *
      * Presentation
      * ------------------------------------------------------------------ */
